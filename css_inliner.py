@@ -26,6 +26,7 @@ InlineCssDict = dict[CssSelectors, CssInlineStyleDefinition]
 class InlineCSSArgs:
     input_html: str
     output_html: str
+    silent: bool
 
 
 class ProcessedDeclarations(TypedDict):
@@ -46,6 +47,11 @@ def get_arguments() -> InlineCSSArgs:
         type=str,
         required=True,
         help="The path of the output html file.",
+    )
+    parser.add_argument(
+        "--silent",
+        action="store_true",
+        help=("Surpresses all warnings."),
     )
     return InlineCSSArgs(**vars(parser.parse_args()))
 
@@ -166,7 +172,11 @@ def write_soup_output(soup: BeautifulSoup, output_path: str) -> None:
 
 def main() -> int:
     args: InlineCSSArgs = get_arguments()
-    cssutils.log.setLevel(logging.FATAL)  # type: ignore
+
+    if args.silent:
+        cssutils.log.setLevel(logging.CRITICAL)  # type: ignore
+    else:
+        cssutils.log.setLevel(logging.FATAL)  # type: ignore
 
     soup: BeautifulSoup = get_soup_from_html_file(args.input_html)
     parser: CSSParser = CSSParser(raiseExceptions=True)
